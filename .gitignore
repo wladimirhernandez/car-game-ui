@@ -19,3 +19,6 @@ odd/
 
 # JetBrains IDE state
 .idea/
+
+# Agent tooling metadata
+.atl/
