@@ -1,0 +1,21 @@
+# Build output
+Bin/
+Build/
+*.obj
+*.pdb
+*.ilk
+*.log
+*.tlog
+
+# Visual Studio local state
+.vs/
+*.user
+*.VC.db
+*.VC.opendb
+*.ipch
+
+# Internal task tracking (agent workflow notes)
+odd/
+
+# JetBrains IDE state
+.idea/

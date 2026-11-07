@@ -1,0 +1,650 @@
+<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+>
+
+  <!-- ============================================================
+       Colors (sampled from the reference design)
+       ============================================================ -->
+  <Color x:Key="Color.Background">#FF0E0E10</Color>
+  <Color x:Key="Color.Accent">#FFF2B705</Color>
+  <Color x:Key="Color.AccentTransparent">#00F2B705</Color>
+  <Color x:Key="Color.TextPrimary">#FFFFFFFF</Color>
+  <Color x:Key="Color.TextSecondary">#FFC9C9CE</Color>
+  <Color x:Key="Color.TextMuted">#99FFFFFF</Color>
+  <Color x:Key="Color.CardFill">#59202024</Color>
+  <Color x:Key="Color.CardStroke">#33FFFFFF</Color>
+
+  <SolidColorBrush x:Key="Brush.Background" Color="{StaticResource Color.Background}"/>
+  <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}"/>
+  <SolidColorBrush x:Key="Brush.TextPrimary" Color="{StaticResource Color.TextPrimary}"/>
+  <SolidColorBrush x:Key="Brush.TextSecondary" Color="{StaticResource Color.TextSecondary}"/>
+  <SolidColorBrush x:Key="Brush.TextMuted" Color="{StaticResource Color.TextMuted}"/>
+  <SolidColorBrush x:Key="Brush.CardFill" Color="{StaticResource Color.CardFill}"/>
+  <SolidColorBrush x:Key="Brush.CardStroke" Color="{StaticResource Color.CardStroke}"/>
+
+  <!-- Bottom-to-top yellow glow under the selected card -->
+  <LinearGradientBrush x:Key="Brush.AccentGlow" StartPoint="0,1" EndPoint="0,0">
+    <GradientStop Offset="0" Color="{StaticResource Color.Accent}"/>
+    <GradientStop Offset="0.45" Color="{StaticResource Color.AccentTransparent}"/>
+  </LinearGradientBrush>
+
+  <!-- Darkens the lower part of card images so the title stays readable -->
+  <LinearGradientBrush x:Key="Brush.CardShade" StartPoint="0,0" EndPoint="0,1">
+    <GradientStop Offset="0.3" Color="#00000000"/>
+    <GradientStop Offset="0.62" Color="#B3000000"/>
+    <GradientStop Offset="1" Color="#F2000000"/>
+  </LinearGradientBrush>
+
+  <!-- ============================================================
+       Typography
+       Font files live in Data/Fonts; the family name follows '#'
+       ============================================================ -->
+  <FontFamily x:Key="Font.Main">Fonts/#Titillium Web</FontFamily>
+
+  <Style x:Key="Text.Base" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.Main}"/>
+    <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+  </Style>
+
+  <!-- Top navigation tabs: SINGLE PLAYER, MULTIPLAYER... -->
+  <Style x:Key="Text.Tab" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+    <Setter Property="FontSize" Value="24"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="FontStyle" Value="Italic"/>
+    <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
+  </Style>
+
+  <!-- Card title: Career, Arena, Quick Race... -->
+  <Style x:Key="Text.CardTitle" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+    <Setter Property="FontSize" Value="52"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="FontStyle" Value="Italic"/>
+  </Style>
+
+  <!-- Card description and general body text -->
+  <Style x:Key="Text.Body" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+    <Setter Property="FontSize" Value="23"/>
+    <Setter Property="LineHeight" Value="30"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+    <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
+  </Style>
+
+  <!-- Gamepad hints at the bottom: Quit game, Scroll, Select -->
+  <Style x:Key="Text.Hint" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+    <Setter Property="FontSize" Value="20"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <!-- ============================================================
+       Shapes
+       Card outline: 460x620 with the bottom-right corner cut at 45 degrees.
+       Every card shares it; the selected one grows with a ScaleTransform,
+       so the cut keeps its proportion instead of being stretched.
+       ============================================================ -->
+  <sys:Double x:Key="Card.Width" xmlns:sys="clr-namespace:System;assembly=mscorlib">460</sys:Double>
+  <sys:Double x:Key="Card.Height" xmlns:sys="clr-namespace:System;assembly=mscorlib">620</sys:Double>
+  <Geometry x:Key="Geometry.Card">M0,0 H460 V564 L404,620 H0 Z</Geometry>
+
+  <!-- ============================================================
+       SR logo (design source: Data/Images/logo.svg, same path data).
+       Letters sit on a 16px stroke grid with 45-degree chamfers, the
+       same cut as the cards. The "F0" prefix selects the even-odd fill
+       rule, so the inner rectangle of the R becomes a hole.
+       ============================================================ -->
+  <Geometry x:Key="Logo.Letters">F0 M52,0 H108 V16 H60 V32 H100 L108,40 V72 L100,80 H44 V64 H92 V48 H52 L44,40 V8 Z M120,0 H176 L184,8 V40 L176,48 H172 L184,80 H166 L155,48 H136 V80 H120 Z M136,16 H168 V32 H136 Z</Geometry>
+  <Geometry x:Key="Logo.Streaks">M12,20 H36 V26 H12 Z M0,36 H36 V42 H0 Z M18,52 H36 V58 H18 Z</Geometry>
+  <Geometry x:Key="Logo.Underline">M44,90 H160 V94 H44 Z</Geometry>
+  <Geometry x:Key="Logo.UnderlineEnd">M164,90 H184 V94 H164 Z</Geometry>
+
+  <!-- Logo as a reusable control: <ContentControl Template="{StaticResource Logo}"/> -->
+  <ControlTemplate x:Key="Logo" TargetType="ContentControl">
+    <Canvas Width="190" Height="96">
+      <Canvas.RenderTransform>
+        <SkewTransform AngleX="-14" CenterY="48"/>
+      </Canvas.RenderTransform>
+      <Path Data="{StaticResource Logo.Streaks}" Fill="{StaticResource Brush.Accent}"/>
+      <Path Data="{StaticResource Logo.Letters}" Fill="{StaticResource Brush.TextPrimary}"/>
+      <Path Data="{StaticResource Logo.Underline}" Fill="{StaticResource Brush.TextPrimary}"/>
+      <Path Data="{StaticResource Logo.UnderlineEnd}" Fill="{StaticResource Brush.Accent}"/>
+    </Canvas>
+  </ControlTemplate>
+
+  <!-- ============================================================
+       Gamepad glyphs (PlayStation layout), drawn with vectors so they
+       stay sharp at any resolution. Used as <ContentControl Template=.../>
+       ============================================================ -->
+  <SolidColorBrush x:Key="Brush.Glyph" Color="#FF151517"/>
+
+  <ControlTemplate x:Key="Icon.Pad.Circle" TargetType="ContentControl">
+    <Grid Width="34" Height="34">
+      <Ellipse Fill="{StaticResource Brush.TextPrimary}"/>
+      <Ellipse Margin="9" Stroke="{StaticResource Brush.Glyph}" StrokeThickness="3"/>
+    </Grid>
+  </ControlTemplate>
+
+  <ControlTemplate x:Key="Icon.Pad.Cross" TargetType="ContentControl">
+    <Grid Width="34" Height="34">
+      <Ellipse Fill="{StaticResource Brush.TextPrimary}"/>
+      <Path Data="M11,11 L23,23 M23,11 L11,23" Stroke="{StaticResource Brush.Glyph}"
+            StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+    </Grid>
+  </ControlTemplate>
+
+  <ControlTemplate x:Key="Icon.Pad.Triangle" TargetType="ContentControl">
+    <Grid Width="30" Height="30">
+      <Ellipse Fill="{StaticResource Brush.TextPrimary}"/>
+      <Path Data="M15,8 L22,20 H8 Z" Stroke="{StaticResource Brush.Glyph}" StrokeThickness="2.5"
+            StrokeLineJoin="Round"/>
+    </Grid>
+  </ControlTemplate>
+
+  <!-- Left stick with left/right arrows: "scroll" -->
+  <ControlTemplate x:Key="Icon.Pad.StickL" TargetType="ContentControl">
+    <Grid Width="50" Height="34">
+      <Path Data="M0,17 L6,12 V22 Z" Fill="{StaticResource Brush.TextPrimary}"/>
+      <Path Data="M50,17 L44,12 V22 Z" Fill="{StaticResource Brush.TextPrimary}"/>
+      <Ellipse Width="34" Height="34" Fill="{StaticResource Brush.TextPrimary}"/>
+      <TextBlock Text="L" FontFamily="{StaticResource Font.Main}" FontWeight="Bold" FontSize="18"
+                 Foreground="{StaticResource Brush.Glyph}"
+                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Grid>
+  </ControlTemplate>
+
+  <!-- Shoulder button badge: Content is the label ("L1", "R1") -->
+  <ControlTemplate x:Key="Icon.Pad.Shoulder" TargetType="ContentControl">
+    <Border Background="{StaticResource Brush.TextPrimary}" CornerRadius="5" Height="28" Padding="7,0">
+      <TextBlock Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}"
+                 FontFamily="{StaticResource Font.Main}" FontWeight="Bold" FontSize="17"
+                 Foreground="{StaticResource Brush.Glyph}" VerticalAlignment="Center"/>
+    </Border>
+  </ControlTemplate>
+
+  <!-- Keyboard keycap: Content is the key label ("Esc", "Enter", "Q") -->
+  <ControlTemplate x:Key="Icon.Key" TargetType="ContentControl">
+    <Border MinWidth="34" Height="34" Padding="8,0" CornerRadius="6"
+            Background="{StaticResource Brush.TextPrimary}">
+      <TextBlock Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}"
+                 FontFamily="{StaticResource Font.Main}" FontWeight="Bold" FontSize="16"
+                 Foreground="{StaticResource Brush.Glyph}"
+                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Border>
+  </ControlTemplate>
+
+  <!-- Left and right arrow keys side by side: keyboard version of "scroll" -->
+  <ControlTemplate x:Key="Icon.Key.LeftRight" TargetType="ContentControl">
+    <StackPanel Orientation="Horizontal">
+      <Border Width="34" Height="34" CornerRadius="6" Background="{StaticResource Brush.TextPrimary}">
+        <Path Data="M0,6 L9,0 V12 Z" Fill="{StaticResource Brush.Glyph}"
+              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      </Border>
+      <Border Width="34" Height="34" CornerRadius="6" Margin="4,0,0,0"
+              Background="{StaticResource Brush.TextPrimary}">
+        <Path Data="M9,6 L0,0 V12 Z" Fill="{StaticResource Brush.Glyph}"
+              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      </Border>
+    </StackPanel>
+  </ControlTemplate>
+
+  <!-- Device-aware visibility: the Shell (window DataContext) flips UsingGamepad with the last
+       device used, and each hint shows only for its own device -->
+  <Style x:Key="Hint.Gamepad" TargetType="FrameworkElement">
+    <Setter Property="Visibility" Value="Collapsed"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding DataContext.UsingGamepad, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+        <Setter Property="Visibility" Value="Visible"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+
+  <Style x:Key="Hint.Keyboard" TargetType="FrameworkElement">
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding DataContext.UsingGamepad, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+        <Setter Property="Visibility" Value="Collapsed"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- Padlock shown on locked game modes -->
+  <ControlTemplate x:Key="Icon.Lock" TargetType="ContentControl">
+    <Canvas Width="34" Height="42">
+      <Path Data="M8,19 V12 A9,9 0 0 1 26,12 V19" Stroke="{StaticResource Brush.TextPrimary}"
+            StrokeThickness="4"/>
+      <Rectangle Canvas.Top="18" Width="34" Height="24" RadiusX="4" RadiusY="4"
+                 Fill="{StaticResource Brush.TextPrimary}"/>
+    </Canvas>
+  </ControlTemplate>
+
+  <!-- ============================================================
+       Motion: one shared easing so every animation feels the same.
+       EaseOut starts fast and settles gently, which reads as "responsive".
+       ============================================================ -->
+  <CubicEase x:Key="Ease.Out" EasingMode="EaseOut"/>
+
+  <!-- Card artwork: CC0 photos in Data/Images (sources in Data/Images/CREDITS.md).
+       UniformToFill covers the whole card and crops the excess, like CSS object-fit: cover -->
+  <ImageBrush x:Key="Art.TimeTrial" ImageSource="Images/mode_timetrial.jpg" Stretch="UniformToFill"/>
+  <ImageBrush x:Key="Art.Arena" ImageSource="Images/mode_arena.jpg" Stretch="UniformToFill"/>
+  <ImageBrush x:Key="Art.Career" ImageSource="Images/mode_career.jpg" Stretch="UniformToFill"/>
+  <ImageBrush x:Key="Art.QuickRace" ImageSource="Images/mode_quickrace.jpg" Stretch="UniformToFill"/>
+  <ImageBrush x:Key="Art.Championship" ImageSource="Images/mode_championship.jpg" Stretch="UniformToFill"/>
+
+  <!-- ============================================================
+       Game mode card = ListBoxItem whose DataContext is a GameMode
+       (Key, Title, Description, IsLocked) coming from C++.
+       Idle cards are dimmed; IsSelected switches on the accent bar,
+       glow, description and the 4% scale-up.
+       Defined after the placeholders: StaticResource cannot look ahead.
+       ============================================================ -->
+  <Style x:Key="Card.Item" TargetType="ListBoxItem">
+    <Setter Property="Margin" Value="22,0"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <!-- Input is owned by the Window bindings; cards must not steal arrow keys -->
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ListBoxItem">
+          <Grid x:Name="Root" Width="{StaticResource Card.Width}" Height="{StaticResource Card.Height}"
+                Background="Transparent" RenderTransformOrigin="0.5,0.5">
+            <!-- Named so the selection storyboards can animate it -->
+            <Grid.RenderTransform>
+              <ScaleTransform x:Name="Scale"/>
+            </Grid.RenderTransform>
+
+            <!-- Glow that spills below the selected card, outside the clip -->
+            <Ellipse x:Name="Glow" Width="420" Height="140" VerticalAlignment="Bottom" Margin="0,0,0,-80"
+                     Opacity="0.55" Visibility="Collapsed">
+              <Ellipse.Fill>
+                <RadialGradientBrush>
+                  <GradientStop Offset="0" Color="#99F2B705"/>
+                  <GradientStop Offset="1" Color="#00F2B705"/>
+                </RadialGradientBrush>
+              </Ellipse.Fill>
+            </Ellipse>
+
+            <Grid>
+              <Grid.Clip>
+                <StaticResource ResourceKey="Geometry.Card"/>
+              </Grid.Clip>
+
+              <Rectangle x:Name="Art" Fill="{StaticResource Art.TimeTrial}"/>
+              <Rectangle x:Name="AccentGlow" Fill="{StaticResource Brush.AccentGlow}" Opacity="0.35"
+                         Visibility="Collapsed"/>
+              <Rectangle x:Name="Dim" Fill="#8C0E0E10"/>
+              <Rectangle Fill="{StaticResource Brush.CardShade}"/>
+              <Rectangle x:Name="AccentBar" Width="5" HorizontalAlignment="Left"
+                         Fill="{StaticResource Brush.Accent}" Visibility="Collapsed"/>
+
+              <ContentControl x:Name="Lock" Template="{StaticResource Icon.Lock}" Visibility="Collapsed"
+                              HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,40,40,0"
+                              Opacity="0.85"/>
+
+              <!-- Idle: title only, muted -->
+              <TextBlock x:Name="IdleTitle" Text="{Binding Title}" Style="{StaticResource Text.CardTitle}"
+                         Foreground="{StaticResource Brush.TextMuted}" VerticalAlignment="Bottom"
+                         Margin="28,0,28,92"/>
+
+              <!-- Selected: bright title plus description -->
+              <StackPanel x:Name="SelectedText" VerticalAlignment="Bottom" Margin="28,0,40,48"
+                          Visibility="Collapsed">
+                <TextBlock Text="{Binding Title}" Style="{StaticResource Text.CardTitle}"/>
+                <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Body}" Margin="0,6,0,0"/>
+              </StackPanel>
+
+              <Path x:Name="Stroke" Data="{StaticResource Geometry.Card}"
+                    Stroke="{StaticResource Brush.CardStroke}" StrokeThickness="2"/>
+            </Grid>
+          </Grid>
+
+          <ControlTemplate.Triggers>
+            <!-- Artwork per mode -->
+            <DataTrigger Binding="{Binding Key}" Value="Arena">
+              <Setter TargetName="Art" Property="Fill" Value="{StaticResource Art.Arena}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Key}" Value="Career">
+              <Setter TargetName="Art" Property="Fill" Value="{StaticResource Art.Career}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Key}" Value="QuickRace">
+              <Setter TargetName="Art" Property="Fill" Value="{StaticResource Art.QuickRace}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Key}" Value="Championship">
+              <Setter TargetName="Art" Property="Fill" Value="{StaticResource Art.Championship}"/>
+            </DataTrigger>
+
+            <DataTrigger Binding="{Binding IsLocked}" Value="True">
+              <Setter TargetName="Lock" Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+
+            <Trigger Property="IsSelected" Value="True">
+              <!-- Setters switch instantly; storyboards interpolate over time.
+                   EnterActions run when the trigger becomes true, ExitActions when it stops. -->
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX"
+                                     To="1.04" Duration="0:0:0.25" EasingFunction="{StaticResource Ease.Out}"/>
+                    <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY"
+                                     To="1.04" Duration="0:0:0.25" EasingFunction="{StaticResource Ease.Out}"/>
+                    <DoubleAnimation Storyboard.TargetName="SelectedText" Storyboard.TargetProperty="Opacity"
+                                     From="0" To="1" Duration="0:0:0.3"/>
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX"
+                                     To="1" Duration="0:0:0.25" EasingFunction="{StaticResource Ease.Out}"/>
+                    <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY"
+                                     To="1" Duration="0:0:0.25" EasingFunction="{StaticResource Ease.Out}"/>
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.ExitActions>
+              <Setter TargetName="Glow" Property="Visibility" Value="Visible"/>
+              <Setter TargetName="AccentGlow" Property="Visibility" Value="Visible"/>
+              <Setter TargetName="AccentBar" Property="Visibility" Value="Visible"/>
+              <Setter TargetName="Dim" Property="Visibility" Value="Collapsed"/>
+              <Setter TargetName="IdleTitle" Property="Visibility" Value="Collapsed"/>
+              <Setter TargetName="SelectedText" Property="Visibility" Value="Visible"/>
+              <Setter TargetName="Stroke" Property="Stroke" Value="#59FFFFFF"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ============================================================
+       Row.ListBox: a ListBox stripped down to a horizontal row with no
+       ScrollViewer and no focus (input is owned by the Window bindings).
+       Each concrete row adds its item style and its slide animation.
+       ============================================================ -->
+  <Style x:Key="Row.ListBox" TargetType="ListBox">
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="ItemsPanel">
+      <Setter.Value>
+        <ItemsPanelTemplate>
+          <StackPanel Orientation="Horizontal"/>
+        </ItemsPanelTemplate>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ListBox">
+          <ItemsPresenter/>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Game mode carousel. The row slides so the selected card is centered:
+       X = 960 - 252 - 504 * index (504 = 460 card + 2 x 22 margin).
+       A storyboard can not bind its "To", so there is one DataTrigger per index,
+       each with a constant target. The ListBox needs a local TranslateTransform. -->
+  <Style x:Key="Carousel.ListBox" TargetType="ListBox" BasedOn="{StaticResource Row.ListBox}">
+    <Setter Property="ItemContainerStyle" Value="{StaticResource Card.Item}"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding SelectedIndex}" Value="0">
+        <DataTrigger.EnterActions><BeginStoryboard><Storyboard>
+          <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                           To="708" Duration="0:0:0.35" EasingFunction="{StaticResource Ease.Out}"/>
+        </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding SelectedIndex}" Value="1">
+        <DataTrigger.EnterActions><BeginStoryboard><Storyboard>
+          <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                           To="204" Duration="0:0:0.35" EasingFunction="{StaticResource Ease.Out}"/>
+        </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding SelectedIndex}" Value="2">
+        <DataTrigger.EnterActions><BeginStoryboard><Storyboard>
+          <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                           To="-300" Duration="0:0:0.35" EasingFunction="{StaticResource Ease.Out}"/>
+        </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding SelectedIndex}" Value="3">
+        <DataTrigger.EnterActions><BeginStoryboard><Storyboard>
+          <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                           To="-804" Duration="0:0:0.35" EasingFunction="{StaticResource Ease.Out}"/>
+        </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding SelectedIndex}" Value="4">
+        <DataTrigger.EnterActions><BeginStoryboard><Storyboard>
+          <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                           To="-1308" Duration="0:0:0.35" EasingFunction="{StaticResource Ease.Out}"/>
+        </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- ============================================================
+       Section tabs (SINGLE PLAYER, MULTIPLAYER...): DataContext is a SectionTab.
+       The selected one gets the slanted yellow bar and fading plate.
+       ============================================================ -->
+  <Style x:Key="Tab.Item" TargetType="ListBoxItem">
+    <Setter Property="Margin" Value="0,0,44,0"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ListBoxItem">
+          <Grid Background="Transparent">
+            <Border x:Name="Plate" Margin="0,-6,-24,-6" Opacity="0">
+              <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                  <GradientStop Offset="0" Color="#8CF2B705"/>
+                  <GradientStop Offset="1" Color="#00F2B705"/>
+                </LinearGradientBrush>
+              </Border.Background>
+              <Border.RenderTransform>
+                <SkewTransform AngleX="-15"/>
+              </Border.RenderTransform>
+            </Border>
+            <Rectangle x:Name="Bar" Width="7" HorizontalAlignment="Left" Margin="0,-6,0,-6"
+                       Fill="{StaticResource Brush.Accent}" Opacity="0">
+              <Rectangle.RenderTransform>
+                <SkewTransform AngleX="-15"/>
+              </Rectangle.RenderTransform>
+            </Rectangle>
+            <TextBlock x:Name="Label" Text="{Binding Title}" Style="{StaticResource Text.Tab}" Margin="20,0,0,0"/>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+              <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                <DoubleAnimation Storyboard.TargetName="Plate" Storyboard.TargetProperty="Opacity"
+                                 To="1" Duration="0:0:0.2"/>
+                <DoubleAnimation Storyboard.TargetName="Bar" Storyboard.TargetProperty="Opacity"
+                                 To="1" Duration="0:0:0.2"/>
+              </Storyboard></BeginStoryboard></Trigger.EnterActions>
+              <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                <DoubleAnimation Storyboard.TargetName="Plate" Storyboard.TargetProperty="Opacity"
+                                 To="0" Duration="0:0:0.2"/>
+                <DoubleAnimation Storyboard.TargetName="Bar" Storyboard.TargetProperty="Opacity"
+                                 To="0" Duration="0:0:0.2"/>
+              </Storyboard></BeginStoryboard></Trigger.ExitActions>
+              <Setter TargetName="Label" Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="Tabs.ListBox" TargetType="ListBox" BasedOn="{StaticResource Row.ListBox}">
+    <Setter Property="ItemContainerStyle" Value="{StaticResource Tab.Item}"/>
+  </Style>
+
+  <!-- ============================================================
+       Screens: each one is visible only while the Shell says it is the
+       current screen, and fades in when it appears. The binding climbs to
+       the Window because each screen DataContext is its own ViewModel.
+       ============================================================ -->
+  <Style x:Key="Screen.MainMenu" TargetType="FrameworkElement">
+    <Setter Property="Visibility" Value="Collapsed"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding DataContext.CurrentScreen, RelativeSource={RelativeSource AncestorType=Window}}"
+                   Value="MainMenu">
+        <Setter Property="Visibility" Value="Visible"/>
+        <DataTrigger.EnterActions><BeginStoryboard><Storyboard>
+          <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3"/>
+        </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+
+  <Style x:Key="Screen.VehicleSelect" TargetType="FrameworkElement">
+    <Setter Property="Visibility" Value="Collapsed"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding DataContext.CurrentScreen, RelativeSource={RelativeSource AncestorType=Window}}"
+                   Value="VehicleSelect">
+        <Setter Property="Visibility" Value="Visible"/>
+        <DataTrigger.EnterActions><BeginStoryboard><Storyboard>
+          <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3"/>
+        </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- ============================================================
+       Vehicle select: thumbnail strip, stats panel and stat bars
+       ============================================================ -->
+  <!-- Thumbnail outline: 435x171 with the same 45-degree cut as the cards -->
+  <Geometry x:Key="Geometry.Thumb">M0,0 H435 V147 L411,171 H0 Z</Geometry>
+  <!-- Stats panel: rounded top-left, chamfered bottom-left, bleeds off the right edge -->
+  <Geometry x:Key="Geometry.StatsPanel">M24,0 H468 V600 H44 L0,556 V24 A24,24 0 0 1 24,0 Z</Geometry>
+  <!-- Stat bar: slanted right end -->
+  <Geometry x:Key="Geometry.StatBar">M0,0 H367 L355,34 H0 Z</Geometry>
+
+  <!-- Thumbnail of one car: DataContext is a Vehicle -->
+  <Style x:Key="Vehicle.Item" TargetType="ListBoxItem">
+    <Setter Property="Margin" Value="12,0"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ListBoxItem">
+          <Grid Width="435" Height="171">
+            <Grid.Clip>
+              <StaticResource ResourceKey="Geometry.Thumb"/>
+            </Grid.Clip>
+            <Rectangle Fill="#FF1A1A1D"/>
+            <Rectangle>
+              <Rectangle.Fill>
+                <ImageBrush ImageSource="{Binding Thumbnail}" Stretch="UniformToFill"/>
+              </Rectangle.Fill>
+            </Rectangle>
+            <Rectangle x:Name="AccentGlow" Fill="{StaticResource Brush.AccentGlow}" Opacity="0"/>
+            <Rectangle x:Name="Dim" Fill="#990E0E10"/>
+            <Rectangle Fill="{StaticResource Brush.CardShade}"/>
+            <Rectangle x:Name="AccentBar" Width="5" HorizontalAlignment="Left"
+                       Fill="{StaticResource Brush.Accent}" Visibility="Collapsed"/>
+            <TextBlock x:Name="Label" Text="{Binding ShortName}" Style="{StaticResource Text.Hint}"
+                       Foreground="{StaticResource Brush.TextSecondary}" FontSize="22"
+                       HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="16,0,16,12"
+                       TextTrimming="CharacterEllipsis"/>
+            <Path x:Name="Stroke" Data="{StaticResource Geometry.Thumb}"
+                  Stroke="{StaticResource Brush.CardStroke}" StrokeThickness="2"/>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+              <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                <DoubleAnimation Storyboard.TargetName="Dim" Storyboard.TargetProperty="Opacity"
+                                 To="0" Duration="0:0:0.25"/>
+                <DoubleAnimation Storyboard.TargetName="AccentGlow" Storyboard.TargetProperty="Opacity"
+                                 To="0.35" Duration="0:0:0.25"/>
+              </Storyboard></BeginStoryboard></Trigger.EnterActions>
+              <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                <DoubleAnimation Storyboard.TargetName="Dim" Storyboard.TargetProperty="Opacity"
+                                 To="1" Duration="0:0:0.25"/>
+                <DoubleAnimation Storyboard.TargetName="AccentGlow" Storyboard.TargetProperty="Opacity"
+                                 To="0" Duration="0:0:0.25"/>
+              </Storyboard></BeginStoryboard></Trigger.ExitActions>
+              <Setter TargetName="AccentBar" Property="Visibility" Value="Visible"/>
+              <Setter TargetName="Label" Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+              <Setter TargetName="Label" Property="FontWeight" Value="SemiBold"/>
+              <Setter TargetName="Stroke" Property="Stroke" Value="#59FFFFFF"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Thumbnail strip: X = 960 - 229.5 - 459 * index (459 = 435 + 2 x 12 margin) -->
+  <Style x:Key="VehicleStrip.ListBox" TargetType="ListBox" BasedOn="{StaticResource Row.ListBox}">
+    <Setter Property="ItemContainerStyle" Value="{StaticResource Vehicle.Item}"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding SelectedIndex}" Value="0">
+        <DataTrigger.EnterActions><BeginStoryboard><Storyboard>
+          <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                           To="730.5" Duration="0:0:0.35" EasingFunction="{StaticResource Ease.Out}"/>
+        </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding SelectedIndex}" Value="1">
+        <DataTrigger.EnterActions><BeginStoryboard><Storyboard>
+          <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                           To="271.5" Duration="0:0:0.35" EasingFunction="{StaticResource Ease.Out}"/>
+        </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding SelectedIndex}" Value="2">
+        <DataTrigger.EnterActions><BeginStoryboard><Storyboard>
+          <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                           To="-187.5" Duration="0:0:0.35" EasingFunction="{StaticResource Ease.Out}"/>
+        </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding SelectedIndex}" Value="3">
+        <DataTrigger.EnterActions><BeginStoryboard><Storyboard>
+          <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                           To="-646.5" Duration="0:0:0.35" EasingFunction="{StaticResource Ease.Out}"/>
+        </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding SelectedIndex}" Value="4">
+        <DataTrigger.EnterActions><BeginStoryboard><Storyboard>
+          <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                           To="-1105.5" Duration="0:0:0.35" EasingFunction="{StaticResource Ease.Out}"/>
+        </Storyboard></BeginStoryboard></DataTrigger.EnterActions>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- Stat bar: Content = value text ("7.2"), Tag = fill ratio 0..1 -->
+  <ControlTemplate x:Key="Stat.Bar" TargetType="ContentControl">
+    <Grid Width="367" Height="34" HorizontalAlignment="Left">
+      <Grid.Clip>
+        <StaticResource ResourceKey="Geometry.StatBar"/>
+      </Grid.Clip>
+      <Rectangle>
+        <Rectangle.Fill>
+          <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Offset="0" Color="#33FFFFFF"/>
+            <GradientStop Offset="1" Color="#0DFFFFFF"/>
+          </LinearGradientBrush>
+        </Rectangle.Fill>
+      </Rectangle>
+      <Rectangle RenderTransformOrigin="0,0.5">
+        <Rectangle.Fill>
+          <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Offset="0" Color="#40F2B705"/>
+            <GradientStop Offset="1" Color="#FFF2B705"/>
+          </LinearGradientBrush>
+        </Rectangle.Fill>
+        <Rectangle.RenderTransform>
+          <ScaleTransform ScaleX="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"/>
+        </Rectangle.RenderTransform>
+      </Rectangle>
+      <TextBlock Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}"
+                 Style="{StaticResource Text.Base}" FontSize="22" FontWeight="Bold" FontStyle="Italic"
+                 VerticalAlignment="Center" Margin="14,0,0,0"/>
+    </Grid>
+  </ControlTemplate>
+
+  <!-- Stat label above each bar: Top Speed, Acceleration, Braking -->
+  <Style x:Key="Text.StatLabel" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+    <Setter Property="FontSize" Value="24"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="FontStyle" Value="Italic"/>
+    <Setter Property="Margin" Value="0,0,0,8"/>
+  </Style>
+
+</ResourceDictionary>

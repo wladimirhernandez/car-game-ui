@@ -1,0 +1,17 @@
+<!-- SR logo: source design. The same path data lives in Data/Resources.xaml (Logo.*),
+     because XAML Path geometry uses the SVG path syntax. Letters are built on a
+     16px stroke grid with 45-degree chamfers (the same cut as the game mode cards). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 -4 230 104" width="460" height="208">
+  <rect x="-20" y="-4" width="230" height="104" fill="#0E0E10"/>
+  <g transform="skewX(-14)">
+    <!-- Motion streaks -->
+    <path fill="#F2B705" d="M12,20 H36 V26 H12 Z M0,36 H36 V42 H0 Z M18,52 H36 V58 H18 Z"/>
+    <!-- Letters: S and R (the R counter is a hole, even-odd fill) -->
+    <path fill="#FFFFFF" fill-rule="evenodd"
+          d="M52,0 H108 V16 H60 V32 H100 L108,40 V72 L100,80 H44 V64 H92 V48 H52 L44,40 V8 Z
+             M120,0 H176 L184,8 V40 L176,48 H172 L184,80 H166 L155,48 H136 V80 H120 Z M136,16 H168 V32 H136 Z"/>
+    <!-- Pit-lane underline: white run, yellow end -->
+    <path fill="#FFFFFF" d="M44,90 H160 V94 H44 Z"/>
+    <path fill="#F2B705" d="M164,90 H184 V94 H164 Z"/>
+  </g>
+</svg>

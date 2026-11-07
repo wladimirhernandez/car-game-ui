@@ -1,0 +1,319 @@
+<Window
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  Title="Car Game UI"
+  Width="1280" Height="720"
+  WindowState="Maximized"
+  Background="{StaticResource Brush.Background}"
+  FocusVisualStyle="{x:Null}">
+
+  <!-- ============================================================
+       Input map. The DataContext is the ShellViewModel: it knows which
+       screen is active and routes each command to it. Keyboard and
+       gamepad call the same commands.
+       ============================================================ -->
+  <Window.InputBindings>
+    <KeyBinding Key="Left" Command="{Binding LeftCommand}"/>
+    <KeyBinding Key="Right" Command="{Binding RightCommand}"/>
+    <KeyBinding Key="Enter" Command="{Binding AcceptCommand}"/>
+    <KeyBinding Key="Escape" Command="{Binding BackCommand}"/>
+    <KeyBinding Key="Q" Command="{Binding PreviousTabCommand}"/>
+    <KeyBinding Key="E" Command="{Binding NextTabCommand}"/>
+    <KeyBinding Key="M" Command="{Binding MainMenuCommand}"/>
+
+    <KeyBinding Key="GamepadLeft" Command="{Binding LeftCommand}"/>
+    <KeyBinding Key="GamepadRight" Command="{Binding RightCommand}"/>
+    <KeyBinding Key="GamepadAccept" Command="{Binding AcceptCommand}"/>
+    <KeyBinding Key="GamepadCancel" Command="{Binding BackCommand}"/>
+    <KeyBinding Key="GamepadPageLeft" Command="{Binding PreviousTabCommand}"/>
+    <KeyBinding Key="GamepadPageRight" Command="{Binding NextTabCommand}"/>
+    <KeyBinding Key="GamepadMenu" Command="{Binding MainMenuCommand}"/>
+  </Window.InputBindings>
+
+  <Grid>
+    <!-- ==========================================================
+         Full-window backgrounds. They live outside the Viewbox so they
+         fill any aspect ratio with no letterbox bars.
+         ========================================================== -->
+
+    <!-- Main menu: CC0 photo plus vignette -->
+    <Grid Style="{StaticResource Screen.MainMenu}">
+      <Image Source="Images/background.jpg" Stretch="UniformToFill"/>
+      <Rectangle>
+        <Rectangle.Fill>
+          <RadialGradientBrush Center="0.6,0.4" GradientOrigin="0.6,0.4" RadiusX="0.8" RadiusY="0.9">
+            <GradientStop Offset="0" Color="#990E0E10"/>
+            <GradientStop Offset="1" Color="#F20E0E10"/>
+          </RadialGradientBrush>
+        </Rectangle.Fill>
+      </Rectangle>
+    </Grid>
+
+    <!-- Vehicle select: the highlighted car fills the screen -->
+    <Grid Style="{StaticResource Screen.VehicleSelect}" DataContext="{Binding VehicleSelect}">
+      <Image Source="{Binding SelectedVehicle.Hero}" Stretch="UniformToFill"/>
+      <!-- Darken the right side for the stats panel -->
+      <Rectangle>
+        <Rectangle.Fill>
+          <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Offset="0.55" Color="#000E0E10"/>
+            <GradientStop Offset="1" Color="#CC0E0E10"/>
+          </LinearGradientBrush>
+        </Rectangle.Fill>
+      </Rectangle>
+    </Grid>
+
+    <!-- Shared top and bottom darkening so the header, strip and hints read well -->
+    <Rectangle>
+      <Rectangle.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Offset="0" Color="#CC000000"/>
+          <GradientStop Offset="0.22" Color="#00000000"/>
+          <GradientStop Offset="0.62" Color="#00000000"/>
+          <GradientStop Offset="1" Color="#E6000000"/>
+        </LinearGradientBrush>
+      </Rectangle.Fill>
+    </Rectangle>
+
+    <!-- Design surface is 1920x1080; the Viewbox scales it uniformly to any window size -->
+    <Viewbox Stretch="Uniform">
+      <Grid Width="1920" Height="1080">
+
+        <!-- ========================================================
+             SCREEN 1: MAIN MENU (DataContext = MainMenuViewModel)
+             ======================================================== -->
+        <Grid Style="{StaticResource Screen.MainMenu}" DataContext="{Binding MainMenu}">
+
+          <!-- Logo (top-left) -->
+          <ContentControl Template="{StaticResource Logo}" HorizontalAlignment="Left" VerticalAlignment="Top"
+                          Margin="60,62,0,0"/>
+
+          <!-- Section tabs (top-center): Q/E or L1/R1 switch between them -->
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top"
+                      Margin="0,197,0,0">
+            <Grid VerticalAlignment="Center">
+              <ContentControl Template="{StaticResource Icon.Pad.Shoulder}" Content="L1" Style="{StaticResource Hint.Gamepad}"/>
+              <ContentControl Template="{StaticResource Icon.Key}" Content="Q" Style="{StaticResource Hint.Keyboard}"/>
+            </Grid>
+            <Path Data="M0,7 L9,0 V14 Z" Fill="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"
+                  Margin="10,0,22,0"/>
+
+            <ListBox Style="{StaticResource Tabs.ListBox}" VerticalAlignment="Center"
+                     ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab, Mode=TwoWay}"/>
+
+            <Path Data="M9,7 L0,0 V14 Z" Fill="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"
+                  Margin="0,0,10,0"/>
+            <Grid VerticalAlignment="Center">
+              <ContentControl Template="{StaticResource Icon.Pad.Shoulder}" Content="R1" Style="{StaticResource Hint.Gamepad}"/>
+              <ContentControl Template="{StaticResource Icon.Key}" Content="E" Style="{StaticResource Hint.Keyboard}"/>
+            </Grid>
+          </StackPanel>
+
+          <!-- Game mode carousel (SINGLE PLAYER only). The ListBox carries its own
+               TranslateTransform: Carousel.ListBox animates its X on every selection. -->
+          <Canvas>
+            <Canvas.Style>
+              <Style TargetType="Canvas">
+                <Setter Property="Visibility" Value="Collapsed"/>
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding ShowGameModes}" Value="True">
+                    <Setter Property="Visibility" Value="Visible"/>
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </Canvas.Style>
+            <ListBox Style="{StaticResource Carousel.ListBox}" Canvas.Top="290"
+                     ItemsSource="{Binding GameModes}" SelectedItem="{Binding SelectedMode, Mode=TwoWay}">
+              <ListBox.RenderTransform>
+                <TranslateTransform/>
+              </ListBox.RenderTransform>
+            </ListBox>
+          </Canvas>
+
+          <!-- Other tabs have no content in this demo -->
+          <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel.Style>
+              <Style TargetType="StackPanel">
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding ShowGameModes}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </StackPanel.Style>
+            <TextBlock Text="{Binding SelectedTab.Title}" Style="{StaticResource Text.CardTitle}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Coming soon" Style="{StaticResource Text.Body}" HorizontalAlignment="Center"
+                       Margin="0,8,0,0"/>
+          </StackPanel>
+
+          <!-- Input hints (bottom-left) -->
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                      Margin="55,0,0,54">
+            <Grid VerticalAlignment="Center">
+              <ContentControl Template="{StaticResource Icon.Pad.Circle}" Style="{StaticResource Hint.Gamepad}"/>
+              <ContentControl Template="{StaticResource Icon.Key}" Content="Esc" Style="{StaticResource Hint.Keyboard}"/>
+            </Grid>
+            <TextBlock Text="Quit game" Style="{StaticResource Text.Hint}" Margin="12,0,40,0"/>
+            <Grid VerticalAlignment="Center">
+              <ContentControl Template="{StaticResource Icon.Pad.StickL}" Style="{StaticResource Hint.Gamepad}"/>
+              <ContentControl Template="{StaticResource Icon.Key.LeftRight}" Style="{StaticResource Hint.Keyboard}"/>
+            </Grid>
+            <TextBlock Text="Scroll" Style="{StaticResource Text.Hint}" Margin="12,0,40,0"/>
+            <Grid VerticalAlignment="Center">
+              <ContentControl Template="{StaticResource Icon.Pad.Cross}" Style="{StaticResource Hint.Gamepad}"/>
+              <ContentControl Template="{StaticResource Icon.Key}" Content="Enter" Style="{StaticResource Hint.Keyboard}"/>
+            </Grid>
+            <TextBlock Text="Select" Style="{StaticResource Text.Hint}" Margin="12,0,0,0"/>
+          </StackPanel>
+        </Grid>
+
+        <!-- ========================================================
+             SCREEN 2: VEHICLE SELECT (DataContext = VehicleSelectViewModel)
+             ======================================================== -->
+        <Grid Style="{StaticResource Screen.VehicleSelect}" DataContext="{Binding VehicleSelect}">
+
+          <!-- Breadcrumb (top-center) -->
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top"
+                      Margin="0,80,0,0">
+            <TextBlock Text="Select vehicle" Style="{StaticResource Text.Hint}" FontSize="24"
+                       Foreground="{StaticResource Brush.TextSecondary}"/>
+            <TextBlock Text=" / " Style="{StaticResource Text.Hint}" FontSize="24"
+                       Foreground="{StaticResource Brush.TextSecondary}"/>
+            <TextBlock Text="{Binding SelectedVehicle.Brand}" Style="{StaticResource Text.Hint}" FontSize="24"
+                       FontWeight="SemiBold"/>
+          </StackPanel>
+
+          <!-- Stats panel (right, bleeds off the edge) -->
+          <Grid Width="468" Height="600" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,156,0,0">
+            <Grid.Clip>
+              <StaticResource ResourceKey="Geometry.StatsPanel"/>
+            </Grid.Clip>
+            <Rectangle>
+              <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                  <GradientStop Offset="0" Color="#F21A1A1D"/>
+                  <GradientStop Offset="1" Color="#E6111113"/>
+                </LinearGradientBrush>
+              </Rectangle.Fill>
+            </Rectangle>
+
+            <StackPanel Margin="44,40,40,0">
+              <TextBlock Text="{Binding SelectedVehicle.Brand}" Style="{StaticResource Text.Hint}"
+                         FontStyle="Italic" Foreground="{StaticResource Brush.TextSecondary}"/>
+              <TextBlock Text="{Binding SelectedVehicle.Model}" Style="{StaticResource Text.CardTitle}"
+                         FontSize="48" TextTrimming="CharacterEllipsis"/>
+              <TextBlock Text="{Binding SelectedVehicle.Year}" Style="{StaticResource Text.Hint}"
+                         FontStyle="Italic" Foreground="{StaticResource Brush.TextMuted}"/>
+
+              <TextBlock Text="Top Speed" Style="{StaticResource Text.StatLabel}" Margin="0,32,0,8"/>
+              <ContentControl Template="{StaticResource Stat.Bar}"
+                              Content="{Binding SelectedVehicle.TopSpeedText}" Tag="{Binding SelectedVehicle.TopSpeed}"/>
+
+              <TextBlock Text="Acceleration" Style="{StaticResource Text.StatLabel}" Margin="0,22,0,8"/>
+              <ContentControl Template="{StaticResource Stat.Bar}"
+                              Content="{Binding SelectedVehicle.AccelerationText}" Tag="{Binding SelectedVehicle.Acceleration}"/>
+
+              <TextBlock Text="Braking" Style="{StaticResource Text.StatLabel}" Margin="0,22,0,8"/>
+              <ContentControl Template="{StaticResource Stat.Bar}"
+                              Content="{Binding SelectedVehicle.BrakingText}" Tag="{Binding SelectedVehicle.Braking}"/>
+            </StackPanel>
+
+            <!-- Livery hint (not wired: the livery editor is out of scope) -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="44,0,0,34">
+              <Grid VerticalAlignment="Center">
+                <ContentControl Template="{StaticResource Icon.Pad.Triangle}" Style="{StaticResource Hint.Gamepad}"/>
+                <ContentControl Template="{StaticResource Icon.Key}" Content="L" Style="{StaticResource Hint.Keyboard}"/>
+              </Grid>
+              <TextBlock Text="Customize livery" Style="{StaticResource Text.Hint}" Margin="12,0,0,0"/>
+            </StackPanel>
+
+            <Path Data="{StaticResource Geometry.StatsPanel}" Stroke="{StaticResource Brush.CardStroke}"
+                  StrokeThickness="2"/>
+          </Grid>
+
+          <!-- Thumbnail strip (bottom). Same slide technique as the main menu carousel -->
+          <Canvas>
+            <ListBox Style="{StaticResource VehicleStrip.ListBox}" Canvas.Top="787"
+                     ItemsSource="{Binding Vehicles}" SelectedItem="{Binding SelectedVehicle, Mode=TwoWay}">
+              <ListBox.RenderTransform>
+                <TranslateTransform/>
+              </ListBox.RenderTransform>
+            </ListBox>
+          </Canvas>
+
+          <!-- Input hints (bottom-left) -->
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                      Margin="55,0,0,54">
+            <Grid VerticalAlignment="Center">
+              <ContentControl Template="{StaticResource Icon.Pad.Circle}" Style="{StaticResource Hint.Gamepad}"/>
+              <ContentControl Template="{StaticResource Icon.Key}" Content="Esc" Style="{StaticResource Hint.Keyboard}"/>
+            </Grid>
+            <TextBlock Text="Back" Style="{StaticResource Text.Hint}" Margin="12,0,40,0"/>
+            <Grid VerticalAlignment="Center">
+              <ContentControl Template="{StaticResource Icon.Pad.StickL}" Style="{StaticResource Hint.Gamepad}"/>
+              <ContentControl Template="{StaticResource Icon.Key.LeftRight}" Style="{StaticResource Hint.Keyboard}"/>
+            </Grid>
+            <TextBlock Text="Scroll" Style="{StaticResource Text.Hint}" Margin="12,0,40,0"/>
+            <Grid VerticalAlignment="Center">
+              <ContentControl Template="{StaticResource Icon.Pad.Cross}" Style="{StaticResource Hint.Gamepad}"/>
+              <ContentControl Template="{StaticResource Icon.Key}" Content="Enter" Style="{StaticResource Hint.Keyboard}"/>
+            </Grid>
+            <TextBlock Text="Select" Style="{StaticResource Text.Hint}" Margin="12,0,40,0"/>
+            <Grid VerticalAlignment="Center">
+              <ContentControl Template="{StaticResource Icon.Pad.Shoulder}" Content="OPT" Style="{StaticResource Hint.Gamepad}"/>
+              <ContentControl Template="{StaticResource Icon.Key}" Content="M" Style="{StaticResource Hint.Keyboard}"/>
+            </Grid>
+            <TextBlock Text="Main menu" Style="{StaticResource Text.Hint}" Margin="12,0,0,0"/>
+          </StackPanel>
+        </Grid>
+
+        <!-- ========================================================
+             Shared: profile badge (top-right). DataContext = Shell.
+             ======================================================== -->
+        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,58,0,0">
+          <Border Width="308" Height="74" CornerRadius="37,0,0,37" Background="#D91A1A1D"
+                  BorderBrush="{StaticResource Brush.CardStroke}" BorderThickness="1,1,0,1">
+            <StackPanel Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
+              <!-- Avatar emblem: yellow wing chevrons -->
+              <Path Width="54" Height="44" Stretch="Uniform" Fill="{StaticResource Brush.Accent}"
+                    Data="M0,10 L30,0 L50,8 L34,10 L54,20 L30,22 L44,34 L16,28 L8,44 L4,24 Z"/>
+              <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="{Binding PlayerName}" Style="{StaticResource Text.Base}" FontSize="21"
+                           FontWeight="SemiBold" FontStyle="Italic"/>
+                <!-- Player level on a slanted yellow strip -->
+                <Grid HorizontalAlignment="Left" Margin="2,2,0,0">
+                  <Rectangle Width="70" Height="22" HorizontalAlignment="Left">
+                    <Rectangle.Fill>
+                      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Offset="0" Color="#FFF2B705"/>
+                        <GradientStop Offset="1" Color="#00F2B705"/>
+                      </LinearGradientBrush>
+                    </Rectangle.Fill>
+                    <Rectangle.RenderTransform>
+                      <SkewTransform AngleX="-20"/>
+                    </Rectangle.RenderTransform>
+                  </Rectangle>
+                  <TextBlock Text="{Binding PlayerLevel}" Style="{StaticResource Text.Base}" FontSize="17"
+                             FontWeight="SemiBold" Foreground="{StaticResource Brush.Glyph}" Margin="16,0,0,0"
+                             VerticalAlignment="Center"/>
+                </Grid>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <!-- "Go to profile" only on the main menu, as in the reference -->
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="30,12,0,0"
+                      Style="{StaticResource Screen.MainMenu}">
+            <Grid VerticalAlignment="Center">
+              <ContentControl Template="{StaticResource Icon.Pad.Triangle}" Style="{StaticResource Hint.Gamepad}"/>
+              <ContentControl Template="{StaticResource Icon.Key}" Content="P" Style="{StaticResource Hint.Keyboard}"/>
+            </Grid>
+            <TextBlock Text="Go to profile" Style="{StaticResource Text.Hint}" Margin="12,0,0,0"/>
+          </StackPanel>
+        </StackPanel>
+
+      </Grid>
+    </Viewbox>
+  </Grid>
+
+</Window>

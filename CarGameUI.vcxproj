@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7C3E2A41-5B8D-4F6A-9E21-3D4C5B6A7F80}</ProjectGuid>
+    <ProjectName>CarGameUI</ProjectName>
+    <!-- Noesis SDK location. Override with an environment variable or /p:NoesisSDK=... -->
+    <NoesisSDK Condition="'$(NoesisSDK)' == ''">C:\NoesisSDK</NoesisSDK>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <OutDir>$(ProjectDir)Bin\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)Build\$(Configuration)\</IntDir>
+    <!-- XAML, fonts and images are loaded from Data/ relative to the working directory -->
+    <LocalDebuggerWorkingDirectory>$(ProjectDir)</LocalDebuggerWorkingDirectory>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <WarningLevel>Level4</WarningLevel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ConformanceMode>true</ConformanceMode>
+      <!-- Noesis is built without exceptions and without RTTI: we must match it -->
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <PreprocessorDefinitions>WIN32;WIN32_LEAN_AND_MEAN;VC_EXTRALEAN;STRICT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>
+        $(NoesisSDK)\Include;
+        $(NoesisSDK)\Src\Packages\App\ApplicationLauncher\Include;
+        $(NoesisSDK)\Src\Packages\App\DisplayLauncher\Include;
+        $(NoesisSDK)\Src\Packages\App\Display\Include;
+        $(NoesisSDK)\Src\Packages\App\Interactivity\Include;
+        $(NoesisSDK)\Src\Packages\App\Launcher\Include;
+        $(NoesisSDK)\Src\Packages\App\Providers\Include;
+        $(ProjectDir)Src;
+        %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
+      <AdditionalOptions>/Zc:throwingNew /Zc:threadSafeInit- /Zc:inline /vmb /utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(NoesisSDK)\Lib\windows_x86_64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>NoesisApp.lib;Noesis.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <!-- The exe needs the Noesis DLLs next to it at runtime -->
+      <Command>xcopy /y /d "$(NoesisSDK)\Bin\windows_x86_64\Noesis.dll" "$(OutDir)" &gt;nul
+xcopy /y /d "$(NoesisSDK)\Bin\windows_x86_64\NoesisApp.dll" "$(OutDir)" &gt;nul
+xcopy /y /d "$(NoesisSDK)\Bin\windows_x86_64\NoesisEditor.dll" "$(OutDir)" &gt;nul</Command>
+      <Message>Copying Noesis runtime DLLs</Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'Debug'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;NS_DEBUG;NS_PROFILE;NS_MINIMUM_LOG_LEVEL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Src\Main.cpp" />
+    <ClCompile Include="Src\MainMenu\MainMenuViewModel.cpp" />
+    <ClInclude Include="Src\MainMenu\GameMode.h" />
+    <ClInclude Include="Src\MainMenu\MainMenuViewModel.h" />
+    <ClInclude Include="Src\MainMenu\SectionTab.h" />
+    <ClCompile Include="Src\VehicleSelect\VehicleSelectViewModel.cpp" />
+    <ClInclude Include="Src\VehicleSelect\Vehicle.h" />
+    <ClInclude Include="Src\VehicleSelect\VehicleSelectViewModel.h" />
+    <ClCompile Include="Src\Shell\ShellViewModel.cpp" />
+    <ClInclude Include="Src\Shell\ShellViewModel.h" />
+  </ItemGroup>
+  <!-- Data files are listed only so they show up in Visual Studio; they are not compiled -->
+  <ItemGroup>
+    <None Include="Data\**\*.xaml" />
+    <None Include="Data\Images\*.jpg" />
+    <None Include="Data\Images\CREDITS.md" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
